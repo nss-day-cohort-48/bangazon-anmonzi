@@ -41,3 +41,15 @@ class PaymentTests(APITestCase):
         self.assertEqual(json_response["create_date"], str(datetime.date.today()))
 
     # TODO: Delete payment type
+    def test_delete_payment_type(self):
+        """
+        Ensure we can delete a payment type for a customer
+        """
+        # Seed database with a payment type to delete
+        self.test_create_payment_type()
+
+        url = "/paymenttypes/1"
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
