@@ -96,5 +96,23 @@ class ProductTests(APITestCase):
         self.assertEqual(len(json_response), 3)
 
     # TODO: Delete product
+    def test_delete_a_product(self):
+        """
+        Ensure we can delete a product
+        """
+        # Seed database with a product to delete
+        self.test_create_product()
+        
+        url = "/products/1"
+
+        # Delete product and return a response of 204 to verify it worked
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Get product again and verify the 404 response works when product not found
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # Running lines 114-115 result in AssertionError: 500 != 404
 
     # TODO: Product can be rated. Assert average rating exists.
