@@ -65,3 +65,23 @@ JOIN bangazonapi_product AS bp
     ON bop.product_id = bp.id
 WHERE bo.payment_type_id IS NULL
 GROUP BY order_id;
+
+
+SELECT
+    bf.customer_id,
+    bf.seller_id,
+    user.first_name || ' ' || user.last_name AS customer_name,
+    u.first_name || ' ' || u.last_name AS seller_name
+FROM bangazonapi_favorite AS bf
+JOIN 
+    bangazonapi_customer AS bc
+    ON bf.customer_id = bc.id
+JOIN
+    auth_user AS user
+    ON bc.user_id = user.id
+JOIN 
+    bangazonapi_customer AS bcc
+    ON bf.seller_id = bcc.id
+JOIN
+    auth_user AS u
+    ON bcc.user_id = u.id;
