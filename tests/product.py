@@ -16,16 +16,22 @@ class ProductTests(APITestCase):
         json_response = json.loads(response.content)
         self.token = json_response["token"]
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+       
 
+        # Create a product category
         url = "/productcategories"
         data = {"name": "Sporting Goods"}
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
-
         response = self.client.post(url, data, format='json')
-        json_response = json.loads(response.content)
 
+        # Create a product
+        url = "/products"
+        data = { "name": "Kite", "price": 14.99, "quantity": 60, "description": "It flies high", "category_id": 1, "location": "Pittsburgh" }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json_response["name"], "Sporting Goods")
+
+        
 
     def test_create_product(self):
         """
@@ -93,8 +99,24 @@ class ProductTests(APITestCase):
         response = self.client.get(url, None, format='json')
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(json_response), 3)
+        self.assertEqual(len(json_response), 4)
 
     # TODO: Delete product
+    def test_delete_a_product(self):
+        """
+        Ensure we can delete a product
+        """
+        
+        url = "/products/1"
 
+        # Delete product and return a response of 204 to verify it worked
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Get product again and verify the 404 response works when product not found
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        
     # TODO: Product can be rated. Assert average rating exists.
