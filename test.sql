@@ -22,7 +22,8 @@ SELECT
     bo.id AS order_id,
     user.first_name || ' ' || user.last_name AS full_name,
     bp.merchant_name AS payment_type,
-    SUM(product.price) AS total_price
+    SUM(product.price) AS total_price,
+    count(bop.id) AS num_items
 FROM 
     bangazonapi_order AS bo
 JOIN
