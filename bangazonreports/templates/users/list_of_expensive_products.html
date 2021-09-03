@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bangazon Reports</title>
+  </head>
+  <body>
+    <h1>Bangazon Reports</h1>
+    <h2>Expensive Products Over $1,000</h2>
+
+    {% for product in expensive_products %}
+        <h3>{{ product.description }} {{ product.name }}</h3> 
+        <p>${{ product.price }}</p>
+    {% endfor %}
+  </body>
+</html>
