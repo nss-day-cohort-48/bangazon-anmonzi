@@ -95,15 +95,16 @@ class OrderTests(APITestCase):
         """
         # Seed database with an order
         order = Order()
-        # order.customer =
+        order.customer_id = 1
         order.created_date = "2018-04-12"
+        order.payment_type = None
         order.save()
 
         # Define new properties for order
         data = {
             "customer_id": 1,
-            "created_date": "2019-04-12",
-            "payment_type_id": 1
+            "created_date": "2019-08-15",
+            "payment_type": 1
         }
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
@@ -116,11 +117,6 @@ class OrderTests(APITestCase):
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        
-        self.assertEqual(json_response["id"], 1)
-        self.assertEqual(json_response["customer_id"], 1)
-        self.assertEqual(json_response["created_date"], "2019-04-12")
-        self.assertEqual(json_response["payment_type_id"], 1)
         
 
     # TODO: New line item is not added to closed order
