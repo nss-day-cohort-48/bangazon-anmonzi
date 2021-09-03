@@ -332,10 +332,10 @@ class Products(ViewSet):
 
             serializer = ProductLikeSerializer(customer_product_like, many=False, context={'request': request})
             return Response(serializer.data)
+
         # Customer wants to unlike a product
         elif request.method == "DELETE":
             customer_likes = CustomerProductLike.objects.filter(customer=customer)
-
             product_like = customer_likes.filter(product=pk)
             product_like.delete()
             return Response({}, status=status.HTTP_204_NO_CONTENT)
