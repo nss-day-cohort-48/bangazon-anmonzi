@@ -1,5 +1,6 @@
 import json
 from rest_framework import status
+from bangazonapi.models import Order, Customer
 from rest_framework.test import APITestCase
 
 
@@ -34,6 +35,7 @@ class OrderTests(APITestCase):
         data = {"merchant_name": "Visa", "account_number": "000000000000", "expiration_date": "2020-01-01", "create_date": "2019-11-11"}
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
         response = self.client.post(url, data, format='json')
+        self.payment_type_id = response.data['id']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -91,26 +93,34 @@ class OrderTests(APITestCase):
         """
         Ensure we can update an order with payment information to complete
         """
-        url = "/orders/1"
+        # Seed database with an order
+        order = Order()
+        # order.customer =
+        order.created_date = "2018-04-12"
+        order.save()
+
+        # Define new properties for order
         data = {
             "customer_id": 1,
             "created_date": "2019-04-12",
             "payment_type_id": 1
         }
+
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
-        response = self.client.put(url, data, format='json')
+        response = self.client.put(f"/orders/{order.id}", data, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Get cart and verify payment was added
-        url = "/cart"
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
-        response = self.client.get(url, None, format='json')
+        response = self.client.get(f"/orders/{order.id}", None, format='json')
         json_response = json.loads(response.content)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        
         self.assertEqual(json_response["id"], 1)
-        self.assertEqual(json_response["size"], 1)
+        self.assertEqual(json_response["customer_id"], 1)
+        self.assertEqual(json_response["created_date"], "2019-04-12")
         self.assertEqual(json_response["payment_type_id"], 1)
-        self.assertEqual(len(json_response["lineitems"]), 1)
+        
 
     # TODO: New line item is not added to closed order
