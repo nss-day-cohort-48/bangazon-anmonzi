@@ -8,7 +8,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework import status
-from bangazonapi.models import Product, Customer, ProductCategory
+from bangazonapi.models import Product, Customer, ProductCategory, CustomerProductLike
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -21,6 +21,13 @@ class ProductSerializer(serializers.ModelSerializer):
                   'quantity', 'created_date', 'location', 'image_path',
                   'average_rating', 'can_be_rated', )
         depth = 1
+
+class ProductLikeSerializer(serializers.ModelSerializer):
+    """JSON serializer for customer product likes"""
+    class Meta:
+        model = CustomerProductLike
+        fields = ('id','customer_id', 'product')
+        depth = 2
 
 
 class Products(ViewSet):
@@ -308,3 +315,40 @@ class Products(ViewSet):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         return Response(None, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @action(methods=['post', 'delete'], detail=True)
+    def like(self, request, pk=None):
+        """Managing likes and dislikes of a product"""
+        # Django uses the `Authorization` header to determine
+        # which user is making the request to sign up
+        customer = Customer.objects.get(user=request.auth.user)
+
+        # Customer wants to like a product
+        if request.method == "POST":
+            customer_product_like = CustomerProductLike()
+            customer_product_like.customer = customer
+            customer_product_like.product = Product.objects.get(pk=pk)
+            customer_product_like.save()
+
+            serializer = ProductLikeSerializer(customer_product_like, many=False, context={'request': request})
+            return Response(serializer.data)
+
+        # Customer wants to unlike a product
+        elif request.method == "DELETE":
+            customer_likes = CustomerProductLike.objects.filter(customer=customer)
+            product_like = customer_likes.filter(product=pk)
+            product_like.delete()
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+    @action(methods=['get'], detail=False)
+    def liked(self, request):
+        """Grab customer likes"""
+        customer = Customer.objects.get(user=request.auth.user)
+        product_likes = CustomerProductLike.objects.filter(customer=customer)
+
+        serializer = ProductLikeSerializer(product_likes, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
