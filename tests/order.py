@@ -1,5 +1,6 @@
 import json
 from rest_framework import status
+from bangazonapi.models import Order, Customer
 from rest_framework.test import APITestCase
 
 
@@ -27,6 +28,14 @@ class OrderTests(APITestCase):
         data = { "name": "Kite", "price": 14.99, "quantity": 60, "description": "It flies high", "category_id": 1, "location": "Pittsburgh" }
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
         response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Create a payment type
+        url = "/paymenttypes"
+        data = {"merchant_name": "Visa", "account_number": "000000000000", "expiration_date": "2020-01-01", "create_date": "2019-11-11"}
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
+        self.payment_type_id = response.data['id']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -80,5 +89,34 @@ class OrderTests(APITestCase):
         self.assertEqual(len(json_response["lineitems"]), 0)
 
     # TODO: Complete order by adding payment type
+    def test_update_order_with_payment(self):
+        """
+        Ensure we can update an order with payment information to complete
+        """
+        # Seed database with an order
+        order = Order()
+        order.customer_id = 1
+        order.created_date = "2018-04-12"
+        order.payment_type = None
+        order.save()
+
+        # Define new properties for order
+        data = {
+            "customer_id": 1,
+            "created_date": "2019-08-15",
+            "payment_type": 1
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.put(f"/orders/{order.id}", data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Get cart and verify payment was added
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.get(f"/orders/{order.id}", None, format='json')
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        
 
     # TODO: New line item is not added to closed order
